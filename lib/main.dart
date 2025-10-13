@@ -23,7 +23,7 @@ class KurniaStoreApp extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 🏠 HOME SCREEN
+//  HOME SCREEN
 // ---------------------------------------------------------------------------
 
 class HomeScreen extends StatefulWidget {
@@ -72,38 +72,80 @@ class _HomeScreenState extends State<HomeScreen>
             : 4;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'KurniaStore 🛍️',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(showAnimation ? Icons.pause : Icons.play_arrow),
-            tooltip: "Toggle Animation",
-            onPressed: () {
-              setState(() {
-                showAnimation = !showAnimation;
-              });
-            },
+      body: CustomScrollView(
+        slivers: [
+          // -----------------------------------------------------------------
+          //  HEADER DENGAN LOGO DAN NAMA TOKO
+          // -----------------------------------------------------------------
+          SliverAppBar(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.pinkAccent,
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: const Text(
+                "Kurnia Fashion Store",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black26,
+                      offset: Offset(1, 1),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+              background: Container(
+                color: Colors.black,
+                child: Center(
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/kurnia.png',
+                      fit: BoxFit.cover,
+                      width: 140,
+                      height: 140,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // -----------------------------------------------------------------
+          //  GRID PRODUK DENGAN ANIMASI
+          // -----------------------------------------------------------------
+          SliverToBoxAdapter(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              child: showAnimation
+                  ? _buildAnimatedGrid(crossAxisCount)
+                  : _buildStaticGrid(crossAxisCount),
+            ),
           ),
         ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        child: showAnimation
-            ? _buildAnimatedGrid(crossAxisCount)
-            : _buildStaticGrid(crossAxisCount),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            showAnimation = !showAnimation;
+          });
+        },
+        backgroundColor: Colors.pinkAccent,
+        child: Icon(showAnimation ? Icons.pause : Icons.play_arrow),
       ),
     );
   }
 
   // -------------------------------------------------------------------------
-  // 🌀 IMPLICIT ANIMATION: AnimatedContainer
+  // IMPLICIT ANIMATION: AnimatedContainer
   // -------------------------------------------------------------------------
   Widget _buildAnimatedGrid(int crossAxisCount) {
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(12),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
@@ -163,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // -------------------------------------------------------------------------
-  // ⚙️ EXPLICIT ANIMATION: Rotating FAB
+  // EXPLICIT ANIMATION: Rotating FAB
   // -------------------------------------------------------------------------
   Widget _buildStaticGrid(int crossAxisCount) {
     return Stack(
@@ -188,9 +230,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ---------------------------------------------------------------------------
-// 📦 DETAIL PRODUK
-// ---------------------------------------------------------------------------
+
 class ProductDetailScreen extends StatelessWidget {
   final Map<String, dynamic> product;
   const ProductDetailScreen({super.key, required this.product});
@@ -237,7 +277,7 @@ class ProductDetailScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const Text(
-                  "Dress wanita dengan bahan lembut, desain modern, dan nyaman dipakai untuk acara santai maupun formal.",
+                  "Dress dengan bahan lembut, desain modern, dan nyaman dipakai untuk acara santai maupun formal.",
                 ),
               ],
             ),
