@@ -1,45 +1,38 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../models/product_model.dart';
 
 class ProductControllerHttp extends GetxController {
+  final String apiUrl = "https://fakestoreapi.com/products";
   final products = <ProductModel>[].obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
-  final responseTimeMs = 0.0.obs;
+  final responseTimeMs = 0.obs; // in milliseconds
 
+  /// Memuat data dan mengisi products observable
   Future<void> fetchProducts() async {
-    final stopwatch = Stopwatch()..start();
     isLoading.value = true;
     errorMessage.value = '';
-
-    // 🔹 Mulai event untuk DevTools
-    developer.Timeline.startSync('HTTP Fetch Products');
-
     try {
-      final url = Uri.parse('https://fakestoreapi.com/products');
-      final response = await http.get(url);
+      final sw = Stopwatch()..start();
+      final resp = await http.get(Uri.parse(apiUrl));
+      sw.stop();
+      responseTimeMs.value = sw.elapsedMilliseconds;
 
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
-        products.value =
-            data.map((e) => ProductModel.fromJson(e)).toList();
+      if (resp.statusCode == 200) {
+        final List data = json.decode(resp.body);
+        final list = data.map((e) => ProductModel.fromJson(e)).toList();
+        products.value = list;
       } else {
-        errorMessage.value = 'HTTP Error: ${response.statusCode}';
+        errorMessage.value = 'HTTP Error: ${resp.statusCode}';
+        products.clear();
       }
     } catch (e) {
-      errorMessage.value = 'Error: $e';
+      errorMessage.value = 'HTTP Exception: $e';
+      products.clear();
     } finally {
-      stopwatch.stop();
-      responseTimeMs.value = stopwatch.elapsedMilliseconds.toDouble();
       isLoading.value = false;
-
-      // 🔹 Akhiri event dan beri catatan waktu
-      developer.log('HTTP Response Time: ${responseTimeMs.value} ms',
-          name: 'HTTP');
-      developer.Timeline.finishSync();
     }
   }
 }

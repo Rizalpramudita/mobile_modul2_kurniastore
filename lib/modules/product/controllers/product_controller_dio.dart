@@ -1,47 +1,44 @@
-import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import '../models/product_model.dart';
 
 class ProductControllerDio extends GetxController {
+  final Dio dio = Dio(BaseOptions(baseUrl: "https://fakestoreapi.com"));
   final products = <ProductModel>[].obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
-  final responseTimeMs = 0.0.obs;
+  final responseTimeMs = 0.obs;
 
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://fakestoreapi.com',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  ProductControllerDio() {
+    // optional: add basic logging for debugging
+    dio.interceptors.add(LogInterceptor(responseBody: false));
+  }
 
   Future<void> fetchProducts() async {
-    final stopwatch = Stopwatch()..start();
     isLoading.value = true;
     errorMessage.value = '';
-
-    // 🔹 Mulai event untuk DevTools
-    developer.Timeline.startSync('DIO Fetch Products');
-
     try {
-      final response = await _dio.get('/products');
-      final List data = response.data;
+      final sw = Stopwatch()..start();
+      final resp = await dio.get("/products");
+      sw.stop();
+      responseTimeMs.value = sw.elapsedMilliseconds;
 
-      products.value =
-          data.map((e) => ProductModel.fromJson(e)).toList();
+      if (resp.statusCode == 200) {
+        final data = resp.data as List;
+        final list = data.map((e) => ProductModel.fromJson(e)).toList();
+        products.value = list;
+      } else {
+        errorMessage.value = 'Dio Error: ${resp.statusCode}';
+        products.clear();
+      }
     } on DioException catch (e) {
-      errorMessage.value = e.message ?? 'Dio Error';
+      errorMessage.value = 'Dio Exception: ${e.message}';
+      products.clear();
     } catch (e) {
-      errorMessage.value = 'Unexpected Error: $e';
+      errorMessage.value = 'Unknown Dio Error: $e';
+      products.clear();
     } finally {
-      stopwatch.stop();
-      responseTimeMs.value = stopwatch.elapsedMilliseconds.toDouble();
       isLoading.value = false;
-
-      // 🔹 Catatan waktu untuk log DevTools
-      developer.log('DIO Response Time: ${responseTimeMs.value} ms',
-          name: 'DIO');
-      developer.Timeline.finishSync();
     }
   }
 }
